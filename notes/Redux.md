@@ -8,13 +8,13 @@
 
 The simple struture of our application
 
-![App Structure](/files/app-structure.png)
+![App Structure](./files/app-structure.png)
 
 We have the ``Latest Blogs`` component that wants to show the latest some blogs, some data we get from an external source. But on the ``Homepage``, in the ``Sidebar``, we also want to show some latest blogs as well. So we want to kind of share the data. Both these components need the data. 
 
 What we could do is, in the ``Blog`` component, reach out and grab some data from an external source, store it in the state of this component, and pass it down as props. Regarding the ``Sidebar``, we could the same thing -- reach out in the ``Homepage`` to go and get that data, store it on the state, and pass it down as props. But we are duplicating our code this way so it's propably not the best method for doing this.
 
-![with redux](/files/structure-with-redux.png)
+![with redux](./files/structure-with-redux.png)
 
 With **Redux**, we can store all of our data that we need for the application and is going to be shared between components. If the ``Blog`` component wants some data, it can just reach out or listen to this central store and grab the data and pass it down into the sub component. It goes the same way to the ``Sidebar`` component. There is no convoluted method of passing data between different components around the whole application, and we don't need to duplicate our code.
 
@@ -26,7 +26,7 @@ The components can reach out to the central data store and grab some data but th
 
 There is a process when working with Redux.
 
-![Redux Diagram](/files/redux-pattern.png)
+![Redux Diagram](./files/redux-pattern.png)
 
 ### Access the Data
 
@@ -188,7 +188,7 @@ function myReducer(state = initState, action) {
 
 So far, we have done most of the steps in the Redux Diagram.
 
-![Redux Diagram](/files/redux-pattern.png)
+![Redux Diagram](./files/redux-pattern.png)
 
 - We have created a Store
 - We have created a Reducer, which is passed into that Store
