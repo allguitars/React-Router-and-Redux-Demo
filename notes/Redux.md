@@ -333,6 +333,8 @@ store.dispatch({type: 'ADD_POST', post: 'Egg hunt with yoshi'});
 
 ```
 
+<br>
+
 ## Use Redux with React
 
 When we come to work with React and Redux, we will attach the data to the **props** of the component that subscribes to the Store so we can use them.
@@ -398,7 +400,7 @@ const initState = {
 // we'll pass the initial state as the default value to be
 // the state.
 const rootReducer = (state = initState, action) => {
-  return state; // We won't do any interaction for now.
+  return state; // We won't do any interaction for now
 };
 
 export default rootReducer;
@@ -417,10 +419,258 @@ const store = createStore(rootReducer);
 ...
 ```
 
-Now we have associated the Reducer with the Store. We're saying that this `rootReducer` is what will interact with the ``store``. Then we are passing that ``store`` into the ``Provider`` tag, which is wrapping our ``App`` tag. So now **we are providing access to the store into our React application**.
+Now we have associated the Reducer with the Store. We're saying that this `rootReducer` is what will interact with the ``store``. Then we are passing that ``store`` into the ``Provider`` tag, which is wrapping our ``App`` tag. So now **we are providing access to the store into our React application** and we can access the store inside the application.
 
+<br>
 
+## Mapping State to Props
 
+Now what we need to do is connect our **component** to the **store** so we can interact with the state and get data from the state.
 
+Let's create some dummy data with the initState so that we can interact with it retrieve that data.
+
+```js
+const initState = {
+  posts: [
+    { id: '1', title: 'qui est esse', body: 'est rerum tempore vitae sequi sint nihil reprehenderit dolor beatae ea dolores neque fugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis qui aperiam non debitis possimus qui neque nisi nulla' },
+    { id: '2', title: 'eum et est occaecati', body: 'ullam et saepe reiciendis voluptatem adipisci sit amet autem assumenda provident rerum culpa quis hic commodi nesciunt rem tenetur doloremque ipsam iure quis sunt voluptatem rerum illo velit' },
+    { id: '3', title: 'nesciunt quas odio', body: 'repudiandae veniam quaerat sunt sed alias aut fugiat sit autem sed est voluptatem omnis possimus esse voluptatibus quis est aut tenetur dolor neque' }
+  ]
+};
+```
+
+Now that we have the dummy data, we don't want to use **axios** to go out and grab data anymore. The posts we want to show are noew stored on the State of the Redux Store, the ``initState`` that we pass into it.
+
+**Delete** the following portion of code from _Home.js_. We will not be storing the states on the components anymore. The whole idea of Redux is to have a central store of data that each component can reach out to and grab.
+
+```js
+import axios from 'axios';
+
+...
+
+  state = {
+    posts: []
+  };
+
+  componentDidMount() {
+    axios.get('https://jsonplaceholder.typicode.com/posts')
+      .then(res => {
+        this.setState({
+          posts: res.data.slice(0, 10) // Just grab the first 10
+        });
+      });
+  }
+```
+
+What we do need to do now is connect the ``Home`` component to our Redux Store. This is where the library **react-redux** comes in. It will be the glue layer between React components and the Redux Store.
+
+We will import a **higher-order component** from the library so that we can use this **hoc** to connect the ``Home`` component with Redux Store. 
+
+_Home.js_
+```js
+import { connect } from 'react-redux';
+```
+
+``connect`` is actually a function, and **we invoke that function to bring back a higher-order component**. So when we are wrapping any component with the ``hoc``, we need to use parentheses to invoke the ``connect`` function, and then it returns the ``hoc``. Then we use that ``hoc`` to wrap the component by passing in the component as an argument, which in this case is the ``Home`` component.
+
+_Home.js_
+```js
+// connect() returns the high-order component
+// Then the hoc is wrapping the Home component
+export default connect()(Home);
+```
+
+Imagine now all our data is stored on the central Store. If a component wants access to that Store, then what we do is **take some data from the Store and map that data to the _props_ of our component**.
+
+To do that, we will create a function. Inside the function, we are returning an object which represents the different properties that we want to add to the ``props``. 
+
+_Home.js_
+```js
+const mapStateToProps = (state) => {
+  // Here, we get access to the state of the store so now we can
+  // grab stuff from the state and attach them to props
+  return {
+    posts: state.posts
+  };
+};
+```
+
+In the ``return`` statement, we are taking the ``state`` of the store, grabbing the ``posts`` property, and applying it to a property called ``posts`` and we will map that to the ``props``
+
+Now we pass the ``mapStateToProps`` function inside the ``connect`` function so that when we connect to the Redux, it knows what data we want to grab from the Redux, which is, in this case, ``state.posts``. 
+
+```js
+export default connect(mapStateToProps)(Home);
+```
+
+Now let's log out the props inside the ``Home`` component just so we can see that the ``posts`` object has been applied to the ``props``.
+
+_Home.js_
+```js
+...
+
+render() {
+  console.log(this.props);
+
+  // Grab the property from the props
+  const { posts } = this.props;
+
+...
+
+```
+
+In the console, we now have the ``posts``.
+
+![mapping props](./files/mapping-props.png)
+
+Also, the posts shown on the page are now the stuff from Redux, the dummy data we set in the _rootReducer_.
+
+![dummy data](./files/dummy-data.png)
+
+Now the whole _Home.js_ looks like:
+
+```js
+import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
+import Advantech from '../advantech.png';
+import { connect } from 'react-redux';
+
+class Home extends Component {
+  render() {
+    console.log(this.props);
+    const { posts } = this.props;
+
+    const postList = posts.length ? (
+      posts.map(post => {
+        return (
+          <div className="post card" key={post.id}>
+            <img src={Advantech} alt="Advantech Logo" />
+            <div className="card-content">
+              <Link to={'/' + post.id}>
+                <span className="card-title red-text">{post.title}</span>
+              </Link>
+              <p>{post.body}</p>
+            </div>
+          </div>
+        );
+      })
+    ) : (
+        <div className="center">No posts yet.</div>
+      );
+
+    return (
+      <div className="container home" >
+        <h4 className="center">Home</h4>
+        {postList}
+      </div>
+    );
+  }
+}
+
+const mapStateToProps = (state) => {
+  return {
+    posts: state.posts
+  };
+};
+
+export default connect(mapStateToProps)(Home);
+
+```
+
+<br>
+
+## Use ownProps to Get Route Params
+
+The Home page now looks good, but when we click the link in the title and jump to the Post page, we are not seeing the dummy data. Instead, we are still seeing the data retrieved by **axios** because we are still sending the request using the axios in the ``Post`` component.
+
+**Delete** the following portion of code from _Post.js_
+
+```js
+import axios from 'axios';
+
+  state = {
+    post: null
+  };
+
+  componentDidMount() {
+    const id = this.props.match.params.post_id;
+    axios.get('https://jsonplaceholder.typicode.com/posts/' + id)
+      .then(res => {
+        this.setState({
+          post: res.data
+        });
+      });
+  }
+```
+
+The ``mapStateToProps`` functin actually can take a second parameter called ``ownProps``. This parameter refers to the ``props`` of the current component **before** we attach the additional props from the Redux Store.
+
+Our ``ownProps`` right here contain information about the **routes** so that we can grab the ``id`` from the routes. Then we can use the ``id`` to find the particular blog that we want to connect to from the states on the Store.
+
+We will map the state to the props.
+
+```js
+const mapStateToProps = (state, ownProps) => {
+  // This is where we want to grab that single individual record
+  let id = ownProps.match.params.post_id; // Grab the route paramater
+  return {
+    post: state.posts.find(post => post.id === id)
+  };
+};
+
+export default connect(mapStateToProps)(Post);
+```
+
+``find()`` is a normal JavaScript method. Inside the method, we will check if the id of the post is equal to the id from the route. So, this method will cycle through the ``posts`` on the ``state`` object and it will look at the id of each one. If that id matches the one from the route, if that is true, then it's going to return that ``post``.
+
+Inside the ``find()`` method, we have a callback function taking in each post and do the job inside the arrow function.
+
+You can also rewrite the code as following, which might look more clean.
+
+```js
+  return {
+    post: state.posts.find(post => post.id === id)
+  };
+```
+
+If ``post.id === id`` is true, then it will return that post.
+
+Now that we have attached the ``post`` to the ``props``, we can use it inside the ``Post`` component. 
+
+_Post.js_
+
+```js
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
+class Post extends Component {
+  render() {
+    // Use this.props instead of this.state
+    const post = this.props.post ? (
+      <div className="post">
+        <h4 className="center">{this.props.post.title}</h4>
+        <p>{this.props.post.body}</p>
+      </div>
+    ) : (
+        <div className="center">Loading post...</div>
+      )
+
+    return (
+      <div className="container">
+        {post}
+      </div>
+    );
+  }
+}
+
+const mapStateToProps = (state, ownProps) => {
+  const id = ownProps.match.params.post_id;
+  return {
+    post: state.posts.find(post => post.id === id)
+  };
+};
+
+export default connect(mapStateToProps)(Post);
+```
 
 

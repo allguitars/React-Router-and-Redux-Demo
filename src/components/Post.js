@@ -1,28 +1,13 @@
 import React, { Component } from 'react';
-import axios from 'axios';
+import { connect } from 'react-redux';
 
 class Post extends Component {
-  state = {
-    post: null
-  };
-
-  componentDidMount() {
-    const id = this.props.match.params.post_id;
-    axios.get('https://jsonplaceholder.typicode.com/posts/' + id)
-      .then(res => {
-        this.setState({
-          post: res.data
-        });
-        // console.log(res);
-      });
-  }
-
   render() {
     // If we have a post?
-    const post = this.state.post ? (
+    const post = this.props.post ? (
       <div className="post">
-        <h4 className="center">{this.state.post.title}</h4>
-        <p>{this.state.post.body}</p>
+        <h4 className="center">{this.props.post.title}</h4>
+        <p>{this.props.post.body}</p>
       </div>
     ) : (
         // When the component is initally loaded, and the axios is still
@@ -38,4 +23,12 @@ class Post extends Component {
   }
 }
 
-export default Post;
+const mapStateToProps = (state, ownProps) => {
+  // This is where we want to grab that single individual record
+  const id = ownProps.match.params.post_id; // Grab the route paramater
+  return {
+    post: state.posts.find(post => post.id === id)
+  };
+};
+
+export default connect(mapStateToProps)(Post);
