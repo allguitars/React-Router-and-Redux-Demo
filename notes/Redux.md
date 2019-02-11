@@ -621,7 +621,7 @@ const mapStateToProps = (state, ownProps) => {
 export default connect(mapStateToProps)(Post);
 ```
 
-``find()`` is a normal JavaScript method. Inside the method, we will check if the id of the post is equal to the id from the route. So, this method will cycle through the ``posts`` on the ``state`` object and it will look at the id of each one. If that id matches the one from the route, if that is true, then it's going to return that ``post``.
+``find()`` is a normal JavaScript method. Inside the method, we will check if the id of the post is equal to the id from the route. So, this method will cycle `through` the ``posts`` on the ``state`` object and it will look at the id of each one. If that id matches the one from the route, if that is true, then it's going to return that ``post``.
 
 Inside the ``find()`` method, we have a callback function taking in each post and do the job inside the arrow function.
 
