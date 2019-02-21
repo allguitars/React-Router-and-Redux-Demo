@@ -362,11 +362,12 @@ const store = createStore(); // will pass in the reducer later
 ...
 ```
 
-How does React actually interact with that ``store``?
+How does React actually interact with that ``store`` and the ?
 
 - We will import a component called ``Provider`` from the package ``react-redux``.
 - The ``Provider`` will surround and wrap the root ``App`` component.
-- Then we pass our ``store`` into that provider, and that will provide our application with the store so that the store can then interact with it.
+- We create a ``store`` by calling ``createStore()`` that will take in the Reducer as a parameter. 
+- Then we pass our ``store`` into that ``Provider``, and that will provide our application with the store so that the store can then interact with it.
 
 ```js
 ...
@@ -480,6 +481,8 @@ _Home.js_
 export default connect()(Home);
 ```
 
+Now, we have connected our ``Home`` component right here to our Redux store but we still have trieve the data from that Redux store.
+
 Imagine now all our data is stored on the central Store. If a component wants access to that Store, then what we do is **take some data from the Store and map that data to the _props_ of our component**.
 
 To do that, we will create a function. Inside the function, we are returning an object which represents the different properties that we want to add to the ``props``. 
@@ -497,9 +500,10 @@ const mapStateToProps = (state) => {
 
 In the ``return`` statement, we are taking the ``state`` of the store, grabbing the ``posts`` property, and applying it to a property called ``posts`` and we will map that to the ``props``
 
-Now we pass the ``mapStateToProps`` function inside the ``connect`` function so that when we connect to the Redux, it knows what data we want to grab from the Redux, which is, in this case, ``state.posts``. 
+Now we pass the ``mapStateToProps`` function inside the ``connect`` function so that when we connect to the Redux, it knows what data we want to grab from the Redux, which is, in this case, ``state.posts``. And this ``state`` comes from the ``rootReducer`` that interacts with the Redux store.
 
 ```js
+// Let Home component have the ability to grab the props with the properties mapped from the state
 export default connect(mapStateToProps)(Home);
 ```
 
@@ -510,7 +514,7 @@ _Home.js_
 ...
 
 render() {
-  console.log(this.props);
+  console.log(this.props); // Take a look at the props
 
   // Grab the property from the props
   const { posts } = this.props;
@@ -621,7 +625,7 @@ const mapStateToProps = (state, ownProps) => {
 export default connect(mapStateToProps)(Post);
 ```
 
-``find()`` is a normal JavaScript method. Inside the method, we will check if the id of the post is equal to the id from the route. So, this method will cycle `through` the ``posts`` on the ``state`` object and it will look at the id of each one. If that id matches the one from the route, if that is true, then it's going to return that ``post``.
+``find()`` is a normal JavaScript method. Inside the method, we will check if the id of the post is equal to the id from the route. So, this method will cycle through the ``posts`` on the ``state`` object and it will look at the id of each one. If that id matches the one from the route, if that is true, then it's going to return that ``post``.
 
 Inside the ``find()`` method, we have a callback function taking in each post and do the job inside the arrow function.
 
