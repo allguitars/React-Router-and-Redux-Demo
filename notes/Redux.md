@@ -849,6 +849,52 @@ _Post.js_
   }
 ```
 
+<br>
 
+## Action Creators
 
+Right now, inside the ``Post`` component, when we dispatch an action, we are creating that action directly inside the ``dispatch`` method, and this would work. However, to achieve a better separation of concerns and to make our code and actions more **reusable**, a lot of developers would prefer to use **action creators** to create these actions in separate files.
+
+Action creators are just functions, and what they do is generate an action for us. When we call that function, it returns an action for us to dispatch. If you want to dispatch the same kind of action from different locations, you could do that easily as well.
+
+Under the _src_ folder, create a new folder called _actions_, and inside that folder, we will create a new file called _postActions.js_. So anything to do with a post would be going in here.
+
+We will just make one action creator to begin with, and that will create an action to delete a post.
+
+_postAction.js_
+
+```js
+export const deletePost = (id) => {
+  // Return an action, which is an object
+  return {
+    type: 'DELETE_POST',
+    id  // ES6 syntax -- equals to "id: id"
+  };
+};
+```
+
+Now in _Post.js_, we can call the function we just created.
+
+```js
+import { deletePost } from '../actions/postActions';
+
+...
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    deletePost: (id) => { dispatch(deletePost(id)); }
+  };
+}
+
+...
+```
+
+Remember, the more you use dispatches in different components, the more you will be using action creators like this, especially when we come to more complex things asynchronous tasks to go out and grab some external data.
+
+## Next Steps
+
+- How to use asynchronous code inside Redux
+- How to connect Redux with an external database
+- How to authenticate the application
+- How to deploy either to a server
 

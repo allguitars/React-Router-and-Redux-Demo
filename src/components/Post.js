@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { deletePost } from '../actions/postActions';
 
 class Post extends Component {
   handleClick = () => {
@@ -47,7 +48,7 @@ const mapDispatchToProps = (dispatch) => {
   // return the objects or functions we want to map to the props of this component
   return {
     // map a function
-    deletePost: (id) => { dispatch({ type: 'DELETE_POST', id: id }); }
+    deletePost: (id) => { dispatch(deletePost(id)); }
   };
 }
 
