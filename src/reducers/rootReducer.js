@@ -11,7 +11,18 @@ const initState = {
 // we'll pass the initial state as the default value to be
 // the state.
 const rootReducer = (state = initState, action) => {
-  return state; // We won't do any interaction for now.
+  if (action.type === 'DELETE_POST') {
+    // Update the state here
+    const newPosts = state.posts.filter(post => {
+      return action.id !== post.id;
+    });
+
+    return {
+      ...state,
+      posts: newPosts
+    };
+  }
+  return state;
 };
 
 export default rootReducer;

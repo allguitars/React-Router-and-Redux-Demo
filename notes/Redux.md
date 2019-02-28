@@ -426,9 +426,11 @@ Now we have associated the Reducer with the Store. We're saying that this `rootR
 
 ## Mapping State to Props
 
-Now what we need to do is connect our **component** to the **store** so we can interact with the state and get data from the state.
+Now what we need to do is connect our **component** to the **store** so we can interact with the state on the store and get data from the state.
 
 Let's create some dummy data with the initState so that we can interact with it retrieve that data.
+
+_rootReducer.js_
 
 ```js
 const initState = {
@@ -440,7 +442,7 @@ const initState = {
 };
 ```
 
-Now that we have the dummy data, we don't want to use **axios** to go out and grab data anymore. The posts we want to show are noew stored on the State of the Redux Store, the ``initState`` that we pass into it.
+Now that we have the dummy data, we don't want to use **axios** to go out and grab data anymore. The posts we want to show are now stored on the State of the Redux Store, the ``initState`` that we pass into it.
 
 **Delete** the following portion of code from _Home.js_. We will not be storing the states on the components anymore. The whole idea of Redux is to have a central store of data that each component can reach out to and grab.
 
@@ -463,9 +465,9 @@ import axios from 'axios';
   }
 ```
 
-What we do need to do now is connect the ``Home`` component to our Redux Store. This is where the library **react-redux** comes in. It will be the glue layer between React components and the Redux Store.
+What we need to do now is connect the ``Home`` component to our Redux Store. This is where the library **react-redux** comes in. It will be the glue layer between React components and the Redux Store.
 
-We will import a **higher-order component** from the library so that we can use this **hoc** to connect the ``Home`` component with Redux Store. 
+We will import the function, ``{connect}`` from the **react-redux** library so that we can use the **higher-order component** returned from the ``connect`` function to connect our ``Home`` component with the Redux ``store``. 
 
 _Home.js_
 ```js
@@ -609,16 +611,18 @@ import axios from 'axios';
 
 The ``mapStateToProps`` functin actually can take a second parameter called ``ownProps``. This parameter refers to the ``props`` of the current component **before** we attach the additional props from the Redux Store.
 
-Our ``ownProps`` right here contain information about the **routes** so that we can grab the ``id`` from the routes. Then we can use the ``id`` to find the particular blog that we want to connect to from the states on the Store.
+Our ``ownProps`` right here contain information about the **routes**, and we can grab the ``id`` from the routes. Then we can use the ``id`` to find the particular blog that we want to connect to from the state on the Store.
 
 We will map the state to the props.
 
 ```js
 const mapStateToProps = (state, ownProps) => {
   // This is where we want to grab that single individual record
-  let id = ownProps.match.params.post_id; // Grab the route paramater
+  const id = ownProps.match.params.post_id; // Grab the route paramater
   return {
-    post: state.posts.find(post => post.id === id)
+    post: state.posts.find((post) => {
+      return post.id === id
+    })
   };
 };
 
@@ -676,5 +680,175 @@ const mapStateToProps = (state, ownProps) => {
 
 export default connect(mapStateToProps)(Post);
 ```
+
+<br>
+
+## Map Dispatch to Props
+
+Now what if we want to change the state? What if we want to delete one of these posts, one little delete button or something to delete that?
+
+Then what we need to do is interact with the state from this component. If we want to make a change to the state, we have to **dispath an Action from the component**, and the Action will contain a **type**, like "delete post" or "add post". It will also contain an optional **payload**. In the case of deleting a post, it could be that the payload is the ID of the post we want to delete.
+
+**Steps**
+
+- The Action is dispatched to the Reducer
+- The Reducer checks the type of the Action, takes in the payload, the ID, and makes that change to the central State
+- When the central State changes, we get the updated ``props`` inside the component
+
+What we did previously was **"map state to props"**, and this time, we will do **"map Dispatch to props"** so that we call them from our component.
+
+_Post.js_
+
+```js
+...
+
+const mapDispatchToProps = (dispatch) => {
+  // return the objects or functions we want to map to the props of this component
+  return {
+    // map a function
+    deletePost: (id) => { dispatch({ type: 'DELETE_POST', id: id }); }
+  };
+}
+
+...
+```
+
+``deletePost`` is a function that takes in the ``id`` as an paramter, and what it does is dispatching an action. ``deletePost`` will be attached to our ``props`` so we can use it inside our component. 
+
+Now we need to pass ``mapDispatchToProps`` into the ``connect`` function.
+
+```js
+...
+
+export default connect(mapStateToProps, mapDispatchToProps)(Post);
+```
+
+Let's log the ``props`` to the console so see what the function looks like on the ``props``.
+
+```js
+...
+
+class Post extends Component {
+  render() {
+    console.log(this.props);
+
+    ...
+```
+
+Now we can see that both the ``post`` object and ``deletePost`` function have been attached to the ``props``.
+
+![map dispatch to props](files/map-dispatch.png)
+
+We need some kind of button so that we click that, and it will fire that function at some point.
+
+```js
+  <div className="center">
+    <button className="btn grey" onClick={this.handleClick}>
+      Delete Post
+    </button>
+  </div>
+```
+
+Create the function that handles the click. 
+
+```js
+  handleClick = () => {
+    this.props.deletePost(this.props.post.id);
+  }
+```
+
+The click event on the button will trigger this function, and this function will call the ``deletePost`` function on the props and in turns fire the ``dispatch`` function sending an action to the ``rootReducer``.
+
+Now let's go back to the ``rootReducer`` where we receive the action. For now we just log the action to the console. 
+
+_rootReducer.js_
+
+```js
+const rootReducer = (state = initState, action) => {
+  console.log(action);
+  return state; // We won't do any interaction for now.
+};
+```
+
+_Console_:
+
+```
+{type: "DELETE_POST", id: "1"}
+  id: "1"
+  type: "DELETE_POST"
+```
+
+Now we will update the state according to the action type. Remember! When we update the state, we don't want to do anything destructive. We don't want to alter the original state. We want to work out a non-destrctive way to do this. And we can do that using the ``filter`` method. The filter method does not alter the original array and it creates a a new array. 
+
+The ``filter`` function performs a function on each individual post. If we return ``ture`` for that function, then we keep that post in the new array. If we return ``false``, then we filter that post out of the new array.
+
+```js
+  if (action.type === 'DELETE_POST') {
+    // Update the state here
+    const newPosts = state.posts.filter(post => {
+      return action.id !== post.id;
+    });
+  }
+```
+
+Now we need to return the a new onject which represents the new state. We cannot just return an onject that contains only the ``posts`` property.
+
+```js
+// This is not a good practice
+return {
+  posts: newPosts      
+};
+```
+
+This way might work in this case, but if in the future, we had more properties like ``users: []``, then what it will do is override all of that state object with the object returned in the ``rootReducer``, the one that has no ``users`` property with it.
+
+The better way is take the current state and spread it with the ``...`` operator so all the properties from the state are returned inside the object first, and then we override the ``posts`` property with ``newPosts``.
+
+```js
+  return {
+    ...state,
+    posts: newPosts
+  };
+```
+
+What the _rootReducer.js_ looks like:
+
+```js
+const initState = {
+  // Default values
+  posts: [
+    ...
+};
+
+const rootReducer = (state = initState, action) => {
+  if (action.type === 'DELETE_POST') {
+    const newPosts = state.posts.filter(post => {
+      return action.id !== post.id;
+    });
+
+    return {
+      ...state,
+      posts: newPosts
+    };
+  }
+  return state;
+};
+
+export default rootReducer;
+```
+
+Back to the browser, the post can now be removed when we click the button, but the page remains so it's showing "Loading post". We we want is that when you delete a post, it redirects you to the homepage instead of just seeing a strange message on the original page. 
+
+_Post.js_
+
+```js
+  handleClick = () => {
+    this.props.deletePost(this.props.post.id);
+    // Redirect you to the homepage
+    this.props.history.push('/');
+  }
+```
+
+
 
 
